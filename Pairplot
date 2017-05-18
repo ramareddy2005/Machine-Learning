@@ -1,0 +1,13 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+%matplotlib inline
+os.chdir('C:\\Users\\hp\\Desktop\\viasat')
+train = pd.read_csv('virgin_train.csv')
+train.head()
+train.info()
+sns.pairplot(train)
+sns.swarmplot(x="To", y="Uptime.MTIn.Coverage", data=train)
+
