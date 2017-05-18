@@ -1,0 +1,200 @@
+library(ggplot2)
+library(caret)
+library(dplyr)
+#library(compare)
+#library(rminer)
+install.packages("lattice")
+library(mice)
+library(VIM) #Package for aggregate function
+library(doParallel)
+library(randomForest)
+library(lattice)
+library(Metrics)
+
+cluster = makeCluster(detectCores())
+registerDoParallel(cluster)
+
+#setwd("C:/Users/User/Desktop/RK/Virgin-Reports")
+virgin_train = read.csv("virgin_train.csv", na.strings=c("","NA"))
+virgin_test = read.csv("virgin_test.csv", na.strings=c("","NA"))
+virgin_test_actual = read.csv("Virgin_test_Actual.csv", na.strings=c("","NA"))
+
+
+dim(virgin_train)
+str(virgin_train)
+str(virgin_test)
+summary(virgin_train)
+
+
+#Type casting
+virgin_train$TailID = as.factor(virgin_train$TailID)
+
+#EDA
+
+#Exploring structure of data
+summary(restaurant_train)
+#============================================================================
+
+
+  
+
+
+#===========================================================================
+x11()
+ggplot(subset(virgin_train, TailID %in% c("N285VA","N281VA","N282VA","N283VA", "N284VA", "N284VA")),
+       aes(x = FlightID, y = Uptime.MTIn.Coverage, color=TailID )) + geom_point()
+x11()
+ggplot(subset(virgin_test, TailID %in% c("N285VA","N281VA","N282VA","N283VA", "N284VA", "N284VA")),
+       aes(x = FlightID, y = Uptime.MTIn.Coverage, color=TailID )) + geom_point()
+x11()
+ggplot(subset(virgin_train, TailID %in% c("N285VA","N281VA","N282VA","N283VA", "N284VA", "N284VA")),
+       aes(x = From, y = Uptime.MTIn.Coverage , color=TailID )) + geom_point()
+x11()
+ggplot(subset(virgin_train1, TailID %in% c("N285VA","N281VA","N282VA","N283VA", "N284VA", "N284VA")),
+       aes(x =To , y = Uptime.MTIn.Coverage, color=TailID )) + geom_point()
+x11()
+ggplot(subset(virgin_train1, TailID %in% c("N285VA","N281VA","N282VA","N283VA", "N284VA", "N284VA")),
+       aes(x =DepartureTime , y = Uptime.MTIn.Coverage, color=TailID )) + geom_point()
+x11()
+ggplot(subset(virgin_train1, TailID %in% c("N281VA","N282VA","N283VA", "N284VA", "N285VA","N286VA","N362VA","N363VA","N364VA","N365VA")),
+       aes(x =ArrivalTime , y = Uptime.MTIn.Coverage, color=TailID )) + geom_point()
+x11()
+ggplot(subset(virgin_train1, FlightID %in% c("VRD1","VRD108")),
+       aes(x=ArrivalTime , y =Uptime.MTIn.Coverage, color= FlightID )) + geom_point()
+
+
+
+
+
+
+#============================================================================
+x11()
+hist(virgin_train$Uptime.MTIn.Coverage, col = c('Yellow','Red','Green','Orange','Blue'))
+#Flight Vs Uptime MT In Coverage
+x11()
+ggplot(subset(virgin_train, TailID %in% c("N285VA","N281VA","N282VA","N283VA", "N284VA", "N284VA")),
+       aes(x = FlightID, y = TotalPEDs, color=TailID )) + geom_point()
+x11()
+ggplot(subset(virgin_test, TailID %in% c("N285VA","N281VA","N282VA","N283VA", "N284VA", "N284VA")),
+       aes(x = FlightID, y = TotalPEDs, color=TailID )) + geom_point()
+
+x11()
+hist(virgin_test$TotalPEDs, col = c('Yellow','Red','Green','Orange','Blue'))
+x11()
+hist(virgin_train$TotalPEDs, col = c('Yellow','Red','Green','Orange','Blue'))
+
+#===================================================================================================
+#mice package has a function known as md.pattern(). 
+#It returns a tabular form of missing value present in each variable in a data set.
+md.pattern(virgin_train)
+x11()
+missed_plot <- aggr(virgin_train, col=c('navyblue','yellow'),
+                    numbers=TRUE, sortVars=TRUE,
+                    labels=names(virgin_train), cex.axis=.7,
+                    gap=3, ylab=c("Missing data","Pattern"))
+#Selecting only numeric features
+virgin_train1 = select(virgin_train, -c(FlightID:To))
+#Separating non-numeric features
+Virgin_train_dummy = select(virgin_train, c(FlightID:To))
+
+virgin_train2 = mice(virgin_train1, m=5, maxit = 50, method = 'pmm', seed = 500)
+summary(virgin_train2)
+virgin_train2$imp$TotalPEDs
+virgin_train3 = complete(virgin_train2, 2)
+str(virgin_train3)
+md.pattern(virgin_train3)
+x11()
+missed_plot_after <- aggr(virgin_train3, col=c('navyblue','yellow'),
+                    numbers=TRUE, sortVars=TRUE,
+                    labels=names(virgin_train3), cex.axis=.7,
+                    gap=3, ylab=c("Missing data","Pattern"))
+
+#===================================================================================================
+#Complete train data with imputation
+virgin_train4 = cbind(Virgin_train_dummy, virgin_train3)
+virgin_train5 = select(virgin_train4, -FlightID)
+
+missed_plot_after <- aggr(virgin_train4, col=c('navyblue','yellow'),
+                          numbers=TRUE, sortVars=TRUE,
+                          labels=names(virgin_train), cex.axis=.7,
+                          gap=3, ylab=c("Missing data","Pattern"))
+
+set.seed(100)
+tr_ctrl1 = trainControl(method="boot")
+tr_ctrl = trainControl(method="cv")
+rf_grid = expand.grid(.mtry=2:14)
+
+gbmGrid = expand.grid(interaction.depth = 3:14,
+                      n.trees = 100,
+                      shrinkage = c(0.01,0.1),
+                      n.minobsinnode = 5)
+
+
+#rf_model = train(x = virgin_train4[,-c(1,ncol(virgin_train4))], y = virgin_train4$Uptime.MTIn.Coverage, method='rf', trControl = tr_ctrl, importance= T)
+model_lm1 = train(Uptime.MTIn.Coverage ~ ., data = virgin_train5, method = "lm")
+model_lm = train(Uptime.MTIn.Coverage~ TailID+From+To+Uptime.MTGate.Gate+Uptime.ACRUIn.Coverage+TotalPEDs+FlightDuration.min.+Uptime.ACRUGate.Gate, data = virgin_train5, method = "lm")
+model_lm$finalModel
+model_rf_boot = train(Uptime.MTIn.Coverage ~ ., data = virgin_train5, method = "rf", trControl = tr_ctrl1)
+#==============================================================
+model_rf_grid = train(Uptime.MTIn.Coverage ~ ., data = virgin_train5, method = "rf", trControl = tr_ctrl, tuneGrid = rf_grid)
+#==============================================================
+model_gbm_cv = train(Uptime.MTIn.Coverage ~ ., data = virgin_train5, method = "gbm", trControl = tr_ctrl, tuneGrid = gbmGrid)
+
+model_gbm_cv$finalModel
+model_gbm_cv$results
+
+str(virgin_train4)
+varImp(rf_model)
+x11()
+varImpPlot(rf_model$finalModel)
+stopCluster(cluster)
+
+
+#Pre-processing for Test data
+
+virgin_test$TailID = as.factor(virgin_test$TailID)
+
+missed_plot_test <- aggr(virgin_test, col=c('navyblue','yellow'),
+                          numbers=TRUE, sortVars=TRUE,
+                          labels=names(virgin_test), cex.axis=.7,
+                          gap=3, ylab=c("Missing data","Pattern"))
+#Selecting only numeric features for Test data
+virgin_test1 = select(virgin_test, -c(FlightID:To))
+#Separating non-numeric features for Test data
+Virgin_test_dummy = select(virgin_test, c(FlightID:To))
+
+virgin_test2 = mice(virgin_test1, m=5, maxit = 50, method = 'pmm', seed = 500)
+virgin_test3 = complete(virgin_test2, 2)
+virgin_test4 = cbind(Virgin_test_dummy, virgin_test3)
+virgin_test5 = select(virgin_test4, -FlightID)
+#virgin_test5 = select(virgin_test4, -c(1:4))
+
+#Checking the class of test and train data(should be match)
+sapply(virgin_train4, class)
+sapply(virgin_test4, class)
+levels(virgin_test5$TailID) = levels(virgin_train5$TailID)
+levels(virgin_test5$From) = levels(virgin_train5$From)
+levels(virgin_test5$To) = levels(virgin_train5$To)
+#Testing train error(Train to train error)
+#virgin_train4$Uptime.MTIn.Coverage_new = predict(rf_model, virgin_train4)
+
+#Testing test error(Train to test error)
+virgin_test$Uptime.MTIn.Coverage = predict(model_rf_boot, virgin_test5)
+virgin_test$Uptime.MTIn.Coverage = predict(model_rf_grid, virgin_test5)
+virgin_test$Uptime.MTIn.Coverage = predict(model_gbm_cv, virgin_test5)
+virgin_test$Uptime.MTIn.Coverage = predict(model_lm, virgin_test5)
+
+write.csv(virgin_test, "Flight_result_lm_05_05_17.csv", row.names = FALSE)
+write.csv(virgin_test, "Flight_result_boot.csv", row.names = FALSE)
+write.csv(virgin_test, "Flight_result_grid.csv", row.names = FALSE)
+write.csv(virgin_test, "Flight_result_gbm_cv1.csv", row.names = FALSE)
+
+
+
+Actual_vs_predicted = stack(data.frame(Predicted = virgin_train5$Uptime.MTIn.Coverage, Actual = fitted(model_gbm_cv)))
+res1 = cbind(Actual_vs_predicted, x=rep(virgin_train5$Uptime.MTIn.Coverage,2))
+x11()
+xyplot(values~x, data = res1, group=ind, auto.key = TRUE)
+
+??auc
+
