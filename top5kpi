@@ -1,0 +1,877 @@
+Private Sub CommandButton1_Click()
+fileXLS = Application.GetOpenFilename("All XLS files (*.xls*), *.xls", , _
+    "Please choose file")
+    If fileXLS = False Then
+    MsgBox ("Please Choose your Input File")
+    Exit Sub
+    Else
+    Cells(3, 26) = fileXLS
+    End If
+    Fname1 = Dir(fileXLS)
+End Sub
+Private Sub CommandButton2_Click()
+Dim fldr As FileDialog
+Dim sItem As String
+Set fldr = Application.FileDialog(msoFileDialogFolderPicker)
+With fldr
+    .Title = "Select a Folder"
+    .AllowMultiSelect = False
+    .InitialFileName = strPath
+    If .Show <> -1 Then GoTo NextCode
+    sItem = .SelectedItems(1)
+End With
+NextCode:
+FolderName = sItem
+If FolderName <> False Then
+    Cells(8, 26) = FolderName
+    End If
+    If FolderName = "" Then
+    MsgBox ("Please Choose Output Folder")
+    End If
+End Sub
+
+Private Sub CommandButton3_Click()
+Dim a, n, p, k As Long
+Application.DisplayAlerts = False
+Application.EnableEvents = False
+Concantenate.hide
+Foldr = ThisWorkbook.Path & "\"
+FolderName1 = Cells(3, 26).Value
+FolderName2 = Cells(8, 26).Value & "\"
+FolderName3 = Cells(5, 26).Value
+'Filename = Dir(FolderName1 & "*.xl*")
+
+Set SummarySheet = Workbooks.Add
+
+Z = Sheets.Count
+Sheets(1).Name = "Input"
+If Z > 1 Then
+Sheets(2).Name = "Dark_MT_Data"
+Sheets(3).Name = "Dark_MT_Count"
+Else
+Sheets.Add
+Sheets(2).Name = "Dark_MT_Data"
+Sheets.Add
+Sheets(3).Name = "Dark_MT_Count"
+End If
+
+    Set Workbk = Workbooks.Open(FolderName1 & Filename, 0, 0)
+    
+        Workbk.Sheets(1).Activate
+            Cells.Select
+            Selection.Copy
+            SummarySheet.Sheets(1).Activate
+            Cells(1, 1).Select
+            ActiveSheet.Paste
+        Workbk.Close savechanges = False
+        SummarySheet.Sheets(1).Name = "Raw_Data"
+TOPKPI
+dt = WorksheetFunction.Text(Date, "DD-MMM-YY")
+tm = WorksheetFunction.Text(Time, "HH-MM-SS-AM/PM")
+Filename = "Top 5 KPI Reports" & "-" & dt & " " & tm
+SummarySheet.SaveAs Filename:=FolderName & Filename
+ActiveWorkbook.Save
+ThisWorkbook.Save
+ActiveWorkbook.Saved = True
+    MsgBox "Successfully Done"
+    ThisWorkbook.Close savechanges:=True
+
+End Sub
+
+Private Sub CommandButton4_Click()
+Concantenate.hide
+Unload Me
+End Sub
+
+Private Sub TextBox1_Change()
+
+End Sub
+
+Private Sub TextBox2_Change()
+
+End Sub
+
+Private Sub UserForm_Click()
+
+End Sub
+
+
+
+Sub TOPKPI()
+
+
+' Replacing blanks with '0'
+    Sheets("Raw_Data").Select
+    n = Cells(Rows.Count, 1).End(xlUp).Row
+    Columns("AB:AF").Select
+    Selection.Replace What:="", Replacement:="0", LookAt:=xlPart, _
+    SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+    ReplaceFormat:=False
+    
+'Sorting
+    ActiveWorkbook.Worksheets("Raw_Data").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("Raw_Data").Sort.SortFields.Add Key:=Range( _
+        "B2:B" & n), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:= _
+        xlSortNormal
+    ActiveWorkbook.Worksheets("Raw_Data").Sort.SortFields.Add Key:=Range( _
+        "H2:H" & n), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:= _
+        xlSortNormal
+    With ActiveWorkbook.Worksheets("Raw_Data").Sort
+        .SetRange Range("A1:AH" & n)
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    
+'Creating Sheets
+    
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Dark_ACRU_Data" '--6
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Dark_ACRU_Count"
+
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Zero_PED_Data" '--8
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Zero_PED_Count"
+
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "MT_Incov_Less_Then_98" '--10
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Low_Conn_Count"
+
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Zero_Pre_Reg" '--12
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Zero_Pre_Reg_Count"
+
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "False_Zero_Ped" ' --14
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "False_Zero_Ped_Count"
+
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "False_MT_Data_Rate" '--16
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "False_MT_Data_Count"
+    
+    k1 = Sheets.Count
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Report Template" ' --4
+    k3 = Sheets.Count
+    Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Final_Report"
+
+    k2 = Sheets.Count
+
+  '  Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Report Template"
+    
+ '====================================================================================='
+ 'Applying Filters
+ '====================================================================================='
+
+ '1) Dark_MT_Data
+ 
+    Sheets("Raw_Data").Select
+    Rows("1:1").Select
+    
+    'To eliminate invalid flights
+    endrow = Cells(Rows.Count, 6).End(xlUp).Row
+    For i = 2 To endrow
+    If Sheets(1).Range("F" & i).Value = Sheets(1).Range("G" & i).Value Then
+    Rows(i).EntireRow.Hidden = True
+    End If
+    Next i
+    
+    Selection.AutoFilter
+    n1 = Cells(Rows.Count, 1).End(xlUp).Row
+    ActiveSheet.Range("$A$1:$AH$" & n1).AutoFilter Field:=28, Criteria1:="=0"
+    ActiveSheet.Range("$A$1:$AH$" & n1).AutoFilter Field:=31, Criteria1:="=0"
+    ActiveSheet.Range("$A$1:$AH$" & n1).AutoFilter Field:=18, Criteria1:="=0"
+    ActiveSheet.Range("$A$1:$AH$" & n1).AutoFilter Field:=24, Criteria1:="=0"
+    ActiveSheet.Range("$A$1:$AH$" & n1).AutoFilter Field:=10, Criteria1:="<>0", _
+        Operator:=xlAnd
+        
+   
+   
+    
+    n1 = Cells(Rows.Count, 1).End(xlUp).Row
+    ActiveSheet.Range("$A$1:$AH$" & n1).Select
+    Selection.Copy
+    Sheets("Dark_MT_Data").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    
+    Sheets("Report Template").Select
+    Cells(1, 2).Select
+    ActiveSheet.Paste
+    
+    nf1 = Cells(Rows.Count, 2).End(xlUp).Row
+    
+    Cells(1, 1).Value = "Status"
+    
+    Cells(2, 1).Value = "Dark_MT"
+    Cells(2, 1).Select
+    
+    If nf1 > 2 Then
+    Selection.AutoFill Destination:=Range(Cells(2, 1), Cells(nf1, 1))
+    End If
+    
+    Sheets("Dark_MT_Data").Select
+    
+    np1 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    If np1 >= 2 Then
+    
+     ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "Dark_MT_Data!" & Sheets("Dark_MT_Data").Range("$A$1:$AH$" & np1).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="Dark_MT_Count!R1C1", TableName:="PivotTable1", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("Dark_MT_Count").Select
+
+   ActiveSheet.PivotTables("PivotTable1").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable1").PivotFields("Tail ID"), "Count of Tail ID", xlCount
+    With ActiveSheet.PivotTables("PivotTable1").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    ActiveSheet.PivotTables("PivotTable1").PivotFields("Tail ID").AutoSort _
+        xlDescending, "Count of Tail ID"
+   
+    Format
+    Else
+    Sheets("Dark_MT_Count").Delete
+    Sheets("Dark_MT_Data").Select
+    Rows(1).EntireRow.Delete
+    
+    End If
+ '===================================================================================
+    '2) Dark_ACRU_Data
+    
+    Sheets("Raw_Data").Select
+
+    ActiveSheet.ShowAllData
+    Rows("1:1").Select
+    'To eliminate invalid flights
+    endrow = Cells(Rows.Count, 6).End(xlUp).Row
+    For i = 2 To endrow
+    If Sheets(1).Range("F" & i).Value = Sheets(1).Range("G" & i).Value Then
+    Rows(i).EntireRow.Hidden = True
+    End If
+    Next i
+    
+    Selection.AutoFilter
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=28, Criteria1:="<>0"
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=31, Criteria1:="=0"
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=24, Criteria1:="=0"
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=18, Criteria1:="=0"
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=10, Criteria1:="<>0", _
+        Operator:=xlAnd
+    n2 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ActiveSheet.Range("$A$1:$AH$" & n2).Select
+    Selection.Copy
+    Sheets("Dark_ACRU_Data").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    
+    Sheets("Report Template").Select
+    Cells(nf1 + 1, 2).Select
+    ActiveSheet.Paste
+    Rows(nf1 + 1).Delete
+    
+    nf2 = Cells(Rows.Count, 2).End(xlUp).Row
+    
+    Cells(nf1 + 1, 1).Value = "Dark_ACRU"
+    Cells(nf1 + 1, 1).Select
+    If (nf2 - nf1) > 1 Then
+    Selection.AutoFill Destination:=Range(Cells(nf1 + 1, 1), Cells(nf2, 1))
+    End If
+    Sheets("Dark_ACRU_Data").Select
+    
+        np2 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+     If np2 >= 2 Then
+     
+     ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "Dark_ACRU_Data!" & Sheets("Dark_ACRU_Data").Range("$A$1:$AH$" & np2).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="Dark_ACRU_Count!R1C1", TableName:="PivotTable2", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("Dark_ACRU_Count").Select
+
+   ActiveSheet.PivotTables("PivotTable2").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable2").PivotFields("Tail ID"), "Count of Tail ID", xlCount
+    With ActiveSheet.PivotTables("PivotTable2").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    ActiveSheet.PivotTables("PivotTable2").PivotFields("Tail ID").AutoSort _
+        xlDescending, "Count of Tail ID"
+   
+    Format
+    Else
+    Sheets("Dark_ACRU_Count").Delete
+    Sheets("Dark_ACRU_Data").Select
+    Rows(1).EntireRow.Delete
+    End If
+'=============================================================================
+'3) Zero_PED_Data
+
+    Sheets("Raw_Data").Select
+    ActiveSheet.ShowAllData
+    Rows("1:1").Select
+    
+    'To eliminate invalid flights
+    endrow = Cells(Rows.Count, 6).End(xlUp).Row
+    For i = 2 To endrow
+    If Sheets(1).Range("F" & i).Value = Sheets(1).Range("G" & i).Value Then
+    Rows(i).EntireRow.Hidden = True
+    End If
+    Next i
+    
+    Selection.AutoFilter
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=29, Criteria1:="<>0", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=32, Criteria1:="<>0", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=24, Criteria1:="=0", _
+        Operator:=xlOr, Criteria2:="="
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=19, Criteria1:="<2", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=33, Criteria1:=">45", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=10, Criteria1:="<>0", _
+        Operator:=xlAnd
+    n3 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    ActiveSheet.Range("$A$1:$AH$" & n3).Select
+    Selection.Copy
+    Sheets("Zero_PED_Data").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    
+    Sheets("Report Template").Select
+    Cells(nf2 + 1, 2).Select
+    ActiveSheet.Paste
+    Rows(nf2 + 1).Delete
+    nf3 = Cells(Rows.Count, 2).End(xlUp).Row
+    Cells(nf2 + 1, 1).Value = "Zero_PEDs"
+    Cells(nf2 + 1, 1).Select
+    If (nf3 - nf2) > 1 Then
+    Selection.AutoFill Destination:=Range(Cells(nf2 + 1, 1), Cells(nf3, 1))
+    End If
+    Sheets("Zero_PED_Data").Select
+    
+    
+    np3 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    If np3 >= 2 Then
+    
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "Zero_PED_Data!" & Sheets("Zero_PED_Data").Range("$A$1:$AH$" & np3).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="Zero_PED_Count!R1C1", TableName:="PivotTable3", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("Zero_PED_Count").Select
+    
+    ActiveSheet.PivotTables("PivotTable3").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable3").PivotFields("Tail ID"), "Count of Tail ID", xlCount
+
+    With ActiveSheet.PivotTables("PivotTable3").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    ActiveSheet.PivotTables("PivotTable3").PivotFields("Tail ID").AutoSort _
+        xlDescending, "Count of Tail ID"
+        
+    Format
+    Else
+    Sheets("Zero_PED_Count").Delete
+    Sheets("Zero_PED_Data").Select
+    Rows(1).EntireRow.Delete
+    End If
+    
+        
+ '================================================================================
+ '4) MT_Incov_Less_Then_98
+ 
+ Sheets("Raw_Data").Select
+    ActiveSheet.ShowAllData
+    Rows("1:1").Select
+    'To eliminate invalid flights
+    endrow = Cells(Rows.Count, 6).End(xlUp).Row
+    For i = 2 To endrow
+    If Sheets(1).Range("F" & i).Value = Sheets(1).Range("G" & i).Value Then
+    Rows(i).EntireRow.Hidden = True
+    End If
+    Next i
+    
+    Selection.AutoFilter
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=29, Criteria1:="<98", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=30, Criteria1:=">=45", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=10, Criteria1:="<>0", _
+        Operator:=xlAnd
+    n4 = Cells(Rows.Count, 1).End(xlUp).Row
+    ActiveSheet.Range("$A$1:$AH$" & n4).Select
+    Selection.Copy
+    Sheets("MT_Incov_Less_Then_98").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    
+    Columns("A:AH").EntireColumn.AutoFit
+    Format
+    Cells(1, 1).Select
+    np4 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    If np4 >= 2 Then
+    
+ 
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "MT_Incov_Less_Then_98!" & Sheets("MT_Incov_Less_Then_98").Range("$A$1:$AH$" & np4).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="Low_Conn_Count!R1C1", TableName:="PivotTable4", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("Low_Conn_Count").Select
+    
+    ActiveSheet.PivotTables("PivotTable4").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable4").PivotFields("Tail ID"), "Count of Tail ID", xlCount
+
+    With ActiveSheet.PivotTables("PivotTable4").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    
+    ActiveSheet.PivotTables("PivotTable4").PivotFields("Tail ID").AutoSort _
+        xlDescending, "Count of Tail ID"
+    Format
+    Else
+    Sheets("Low_Conn_Count").Delete
+    Sheets("MT_Incov_Less_Then_98").Select
+    Rows(1).EntireRow.Delete
+    
+    End If
+'=================================================================================
+    
+    
+ '================================================================================
+'5) Zero_Pre_Reg
+Sheets("Raw_Data").Select
+    ActiveSheet.ShowAllData
+    Rows("1:1").Select
+    
+    'To eliminate invalid flights
+    endrow = Cells(Rows.Count, 6).End(xlUp).Row
+    For i = 2 To endrow
+    If Sheets(1).Range("F" & i).Value = Sheets(1).Range("G" & i).Value Then
+    Rows(i).EntireRow.Hidden = True
+    End If
+    Next i
+    
+    Selection.AutoFilter
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=11, Criteria1:=">45", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=24, Criteria1:=">1", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=26, Criteria1:="=0", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=27, Criteria1:="=0", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=10, Criteria1:="<>0", _
+        Operator:=xlAnd
+        
+    n5 = Cells(Rows.Count, 1).End(xlUp).Row
+    ActiveSheet.Range("$A$1:$AH$" & n5).Select
+    Selection.Copy
+    Sheets("Zero_Pre_Reg").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    
+    Columns("A:AH").EntireColumn.AutoFit
+    Cells(1, 1).Select
+    np5 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    If np5 >= 2 Then
+    
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "Zero_Pre_Reg!" & Sheets("Zero_Pre_Reg").Range("$A$1:$AH$" & np5).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="Zero_Pre_Reg_Count!R1C1", TableName:="PivotTable5", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("Zero_Pre_Reg_Count").Select
+    
+    ActiveSheet.PivotTables("PivotTable5").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable5").PivotFields("Tail ID"), "Count of Tail ID", xlCount
+
+    With ActiveSheet.PivotTables("PivotTable5").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    
+    ActiveSheet.PivotTables("PivotTable5").PivotFields("Tail ID").AutoSort _
+        xlDescending, "Count of Tail ID"
+        
+    Format
+    
+    Else
+    Sheets("Zero_Pre_Reg_Count").Delete
+    Sheets("Zero_Pre_Reg").Select
+    Rows(1).EntireRow.Delete
+    End If
+'=================================================================================
+ 
+   '6) False_Zero_Ped
+   
+   Sheets("Raw_Data").Select
+    ActiveSheet.ShowAllData
+    Rows("1:1").Select
+    
+    'To eliminate invalid flights
+    endrow = Cells(Rows.Count, 6).End(xlUp).Row
+    For i = 2 To endrow
+    If Sheets(1).Range("F" & i).Value = Sheets(1).Range("G" & i).Value Then
+    Rows(i).EntireRow.Hidden = True
+    End If
+    Next i
+    
+    Selection.AutoFilter
+   ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=24, Criteria1:="=0", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=18, Criteria1:=">2", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=10, Criteria1:="<>0", _
+        Operator:=xlAnd
+        
+    n6 = Cells(Rows.Count, 1).End(xlUp).Row
+    ActiveSheet.Range("$A$1:$AH$" & n6).Select
+    Selection.Copy
+    Sheets("False_Zero_Ped").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    
+    Columns("A:AH").EntireColumn.AutoFit
+    Cells(1, 1).Select
+    np6 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    If np6 >= 2 Then
+    
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "False_Zero_Ped!" & Sheets("False_Zero_Ped").Range("$A$1:$AH$" & np6).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="False_Zero_Ped_Count!R1C1", TableName:="PivotTable6", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("False_Zero_Ped_Count").Select
+    ActiveSheet.PivotTables("PivotTable6").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable6").PivotFields("Tail ID"), "Count of Tail ID", xlCount
+
+    With ActiveSheet.PivotTables("PivotTable6").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+   
+    ActiveSheet.PivotTables("PivotTable6").PivotFields("Tail ID").AutoSort _
+        xlDescending, "Count of Tail ID"
+        
+    Format
+    
+    Else
+    Sheets("False_Zero_Ped_Count").Delete
+    Sheets("False_Zero_Ped").Select
+    Rows(1).EntireRow.Delete
+    End If
+   
+'==================================================================================================
+ 
+' 7) False_MT_Data_Rate
+   
+    Sheets("Raw_Data").Select
+    ActiveSheet.ShowAllData
+    Rows("1:1").Select
+    
+    'To eliminate invalid flights
+    endrow = Cells(Rows.Count, 6).End(xlUp).Row
+    For i = 2 To endrow
+    If Sheets(1).Range("F" & i).Value = Sheets(1).Range("G" & i).Value Then
+    Rows(i).EntireRow.Hidden = True
+    End If
+    Next i
+    
+    Selection.AutoFilter
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=24, Criteria1:=">0", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=18, Criteria1:="<1", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=33, Criteria1:=">20", _
+        Operator:=xlAnd
+    ActiveSheet.Range("$A$1:$AH$10000").AutoFilter Field:=10, Criteria1:="<>0", _
+        Operator:=xlAnd
+        
+    n7 = Cells(Rows.Count, 1).End(xlUp).Row
+    ActiveSheet.Range("$A$1:$AH$" & n7).Select
+    Selection.Copy
+    Sheets("False_MT_Data_Rate").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    
+    Cells(1, 1).Select
+    Columns("A:AH").EntireColumn.AutoFit
+    np7 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    If np7 >= 2 Then
+    
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "False_MT_Data_Rate!" & Sheets("False_MT_Data_Rate").Range("$A$1:$AH$" & np7).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="False_MT_Data_Count!R1C1", TableName:="PivotTable7", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("False_MT_Data_Count").Select
+    ActiveSheet.PivotTables("PivotTable7").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable7").PivotFields("Tail ID"), "Count of Tail ID", xlCount
+
+    With ActiveSheet.PivotTables("PivotTable7").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    
+    ActiveSheet.PivotTables("PivotTable7").PivotFields("Tail ID").AutoSort _
+        xlDescending, "Count of Tail ID"
+    Format
+    
+    Else
+    Sheets("False_MT_Data_Count").Delete
+    Sheets("False_MT_Data_Rate").Select
+    Rows(1).EntireRow.Delete
+   End If
+   
+'==================================================================================================
+
+    Sheets("Report Template").Select
+    np8 = Cells(Rows.Count, 1).End(xlUp).Row
+    
+   
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "Report Template!" & Sheets("Report Template").Range("$A$1:$AI$" & np8).Address(ReferenceStyle:=xlR1C1), Version:=xlPivotTableVersion12).CreatePivotTable _
+        TableDestination:="Final_Report!R1C1", TableName:="PivotTable8", DefaultVersion _
+        :=xlPivotTableVersion12
+        
+        
+    Sheets("Final_Report").Select
+    Cells(1, 1).Select
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Status")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Tail ID")
+        .Orientation = xlRowField
+        .Position = 2
+    End With
+    
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Flight ID")
+        .Orientation = xlRowField
+        .Position = 3
+    End With
+    
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("MT MAC")
+        .Orientation = xlRowField
+        .Position = 4
+    End With
+    
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Origin")
+        .Orientation = xlRowField
+        .Position = 5
+    End With
+    
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Destination")
+        .Orientation = xlRowField
+        .Position = 6
+    End With
+    
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Departure Time")
+        .Orientation = xlRowField
+        .Position = 7
+    End With
+    
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Flight Link")
+        .Orientation = xlRowField
+        .Position = 8
+    End With
+    
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Flight Link").Subtotals = _
+        Array(False, False, False, False, False, False, False, False, False, False, False, False)
+        
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Departure Time").Subtotals = _
+        Array(False, False, False, False, False, False, False, False, False, False, False, False)
+        
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Destination").Subtotals = _
+        Array(False, False, False, False, False, False, False, False, False, False, False, False)
+    
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("MT MAC").Subtotals = Array( _
+        False, False, False, False, False, False, False, False, False, False, False, False)
+    
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Origin").Subtotals = Array( _
+        False, False, False, False, False, False, False, False, False, False, False, False)
+    
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Flight ID").Subtotals = _
+        Array(False, False, False, False, False, False, False, False, False, False, False, False)
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Tail ID").Subtotals = Array _
+        (False, False, False, False, False, False, False, False, False, False, False, False)
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Status").Subtotals = Array( _
+        False, False, False, False, False, False, False, False, False, False, False, False)
+    
+    Range("A10").Select
+    With ActiveSheet.PivotTables("PivotTable8")
+        .InGridDropZones = True
+        .RowAxisLayout xlTabularRow
+    End With
+   
+    Columns("A:H").EntireColumn.AutoFit
+
+    
+'================================================
+Sheets.Add(After:=Sheets(Sheets.Count)).Name = "Report_Template"
+Sheets("Final_Report").Select
+    Rows("1:1").Select
+    n8 = Cells(Rows.Count, 1).End(xlUp).Row
+    ActiveSheet.Range("$A$1:$AH$" & n8 - 1).Select
+    Selection.Copy
+    Sheets("Report_template").Select
+    Cells(1, 1).Select
+    ActiveSheet.Paste
+    Cells(1, 1).Select
+    '--------------------------
+    n9 = Cells(Rows.Count, 3).End(xlUp).Row
+    Cells(2, 9).Value = "Notes"
+    Cells(3, 9).Value = "More Research may need to be done"
+    Cells(3, 9).Select
+    Selection.AutoFill Destination:=Range(Cells(3, 9), Cells(n9, 9))
+    '-----------------------------
+
+    '=============================
+    
+    Sheets("Dark_MT_Data").Select
+    Columns("J:AH").Select
+    Selection.Delete Shift:=xlToLeft
+    Columns("C:E").Select
+    Selection.Delete Shift:=xlToLeft
+    
+    If np1 >= 2 Then
+    Format
+    End If
+    Columns("A:H").EntireColumn.AutoFit
+    Range("A1").Select
+    
+    Sheets("Dark_ACRU_Data").Select
+    Columns("J:AH").Select
+    Selection.Delete Shift:=xlToLeft
+    Columns("C:E").Select
+    Selection.Delete Shift:=xlToLeft
+    
+    If np2 >= 2 Then
+    Format
+    End If
+    Columns("A:H").EntireColumn.AutoFit
+    Range("A1").Select
+    
+    Sheets("Zero_PED_Data").Select
+    Columns("J:AH").Select
+    Selection.Delete Shift:=xlToLeft
+    Columns("C:E").Select
+    Selection.Delete Shift:=xlToLeft
+    
+    If np3 >= 2 Then
+    Format
+    End If
+
+    Columns("A:H").EntireColumn.AutoFit
+    Range("A1").Select
+    
+    Sheets("MT_Incov_Less_Then_98").Select
+    If np4 >= 2 Then
+    Format
+    End If
+    
+    Sheets("Zero_Pre_Reg").Select
+    If np5 >= 2 Then
+    Format
+    End If
+    
+    Sheets("False_Zero_Ped").Select
+    If np6 >= 2 Then
+    Format
+    End If
+    
+    Sheets("False_MT_Data_Rate").Select
+    If np7 >= 2 Then
+    Format
+    End If
+    
+    
+    Sheets("Raw_Data").Select
+    ActiveSheet.ShowAllData
+    Rows("1:1").Select
+    Selection.AutoFilter
+    Format
+    
+    Sheets("Report Template").Delete
+    Sheets("Final_Report").Delete
+    
+End Sub
+
+
+Sub Format()
+'
+' Macro1 Macro
+'
+    Range("A1").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range(Selection, Selection.End(xlToRight)).Select
+    Selection.Borders(xlDiagonalDown).LineStyle = xlNone
+    Selection.Borders(xlDiagonalUp).LineStyle = xlNone
+    With Selection.Borders(xlEdgeLeft)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlEdgeTop)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlEdgeRight)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlInsideVertical)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    With Selection.Borders(xlInsideHorizontal)
+        .LineStyle = xlContinuous
+        .ColorIndex = 0
+        .TintAndShade = 0
+        .Weight = xlThin
+    End With
+    Columns("A:B").EntireColumn.AutoFit
+    Cells(1, 1).Select
+End Sub
+
+
+
+
+
+
+
+
+
