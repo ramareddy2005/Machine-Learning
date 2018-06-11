@@ -1,0 +1,610 @@
+import os, sys
+from selenium import webdriver
+from datetime import date, timedelta
+import time
+import glob
+import pandas as pd
+from multiprocessing import Pool
+import openpyxl
+from openpyxl.styles import Alignment
+from openpyxl.styles.borders import Border, Side
+from openpyxl.styles import PatternFill
+from openpyxl.styles import Alignment, Fill
+
+'''
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
+from datetime import datetime
+import numpy as np
+import string
+import xlsxwriter
+import threading
+import subprocess
+
+from openpyxl.styles.borders import Border, Side
+from openpyxl.styles import PatternFill
+from openpyxl.cell import Cell
+from openpyxl.styles import Font
+from openpyxl.styles.colors import Color
+import time
+from datetime import date, timedelta
+'''
+os.getcwd()
+#https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=20170121&airline=jetblue&foreign=0
+#https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=20170121&airline=united&foreign=0
+main_path = r'C:\Users\338153\Downloads\ProdOps'
+input_path = r'C:\Users\338153\Downloads\Input'
+#keep the chrome driver in the below path
+chromedriver_path = r'D:\Brower_drivers\chromedriver.exe'
+def download_report_1(link):
+   print [link]
+   #browser = webdriver.Chrome(executable_path=chromedriver_path)
+   #========
+   #download_dir = main_path
+   chrome_options = webdriver.ChromeOptions()
+   preferences = {"download.default_directory": main_path ,
+               "directory_upgrade": True,
+               "safebrowsing.enabled": True }
+   chrome_options.add_experimental_option("prefs", preferences)
+   browser = webdriver.Chrome(chrome_options=chrome_options,executable_path=chromedriver_path)
+   #==========
+   browser.get(link)
+   username = browser.find_element_by_id("IDToken1")
+   username.send_keys('rmolgary')
+   passwd = browser.find_element_by_id("IDToken2")
+   passwd.send_keys('********')
+   browser.find_element_by_name('Login.Submit').click()
+   print ("Login successful")
+   
+   click_cre_rep_button = browser.find_element_by_id('btn_create_report')
+   click_cre_rep_button.click()
+   time.sleep(5)
+   select_full_report_option = browser.find_element_by_css_selector('#dlg_select_report_msg > label:nth-child(1) > input[type="radio"]')
+   select_full_report_option.click()
+   print ("Report downloaded successfully") ##dlg_select_report_msg > label:nth-child(3) > input[type="radio"] 
+   time.sleep(5) ##dlg_select_report_msg > label:nth-child(5) > input[type="radio"]
+   
+   click_cre_rep_button = browser.find_element_by_id('btn_create_report')
+   click_cre_rep_button.click()
+   time.sleep(5)
+   select_mr_report_option = browser.find_element_by_css_selector('#dlg_select_report_msg > label:nth-child(13) > input[type="radio"]')
+   select_mr_report_option.click()
+   time.sleep(5)
+   select_mr_report_option_save = browser.find_element_by_xpath('/html/body/div[14]/div[4]/div/button[1]/span')
+   select_mr_report_option_save.click()
+   time.sleep(5)
+   select_mr_report_option_close = browser.find_element_by_xpath('/html/body/div[14]/div[4]/div/button[2]/span')
+   select_mr_report_option_close.click()
+   print ("Report downloaded successfully") ##dlg_select_report_msg > label:nth-child(3) > input[type="radio"] 
+   time.sleep(5) ##dlg_select_report_msg > label:nth-child(5) > input[type="radio"]
+   
+   click_cre_rep_button = browser.find_element_by_id('btn_create_report')
+   click_cre_rep_button.click()
+   time.sleep(5)
+   select_HO_report_option = browser.find_element_by_css_selector('#dlg_select_report_msg > label:nth-child(11) > input[type="radio"]')
+   select_HO_report_option.click()
+   time.sleep(5)
+   select_HO_report_option_save = browser.find_element_by_xpath('/html/body/div[14]/div[13]/div/button[1]/span')
+   select_HO_report_option_save.click()
+   time.sleep(5)
+   select_HO_report_option_close = browser.find_element_by_xpath('/html/body/div[14]/div[13]/div/button[2]/span')
+   select_HO_report_option_close.click()
+   print ("Report downloaded successfully") ##dlg_select_report_msg > label:nth-child(3) > input[type="radio"] 
+   time.sleep(5) ##dlg_select_report_msg > label:nth-child(5) > input[type="radio"]
+   browser.quit()
+   return 0
+
+def download_report_2(link):
+   print [link]
+   #browser = webdriver.Chrome(executable_path=chromedriver_path)
+   #========
+   #download_dir = main_path
+   chrome_options = webdriver.ChromeOptions()
+   preferences = {"download.default_directory": main_path ,
+               "directory_upgrade": True,
+               "safebrowsing.enabled": True }
+   chrome_options.add_experimental_option("prefs", preferences)
+   browser = webdriver.Chrome(chrome_options=chrome_options,executable_path=chromedriver_path)
+   #==========
+   browser.get(link)
+   username = browser.find_element_by_id("IDToken1")
+   username.send_keys('rmolgary')
+   passwd = browser.find_element_by_id("IDToken2")
+   passwd.send_keys('*******')
+   browser.find_element_by_name('Login.Submit').click()
+   print ("Login successful")
+   
+   time.sleep(7)
+   click_cre_rep_button = browser.find_element_by_id('btn_create_report')
+   click_cre_rep_button.click()
+   time.sleep(7)
+   select_full_report_option = browser.find_element_by_css_selector('#dlg_select_report_msg > label:nth-child(1) > input[type="radio"]')
+   select_full_report_option.click()
+   print ("Report downloaded successfully") ##dlg_select_report_msg > label:nth-child(3) > input[type="radio"] 
+   time.sleep(7) ##dlg_select_report_msg > label:nth-child(5) > input[type="radio"]
+   
+   click_cre_rep_button = browser.find_element_by_id('btn_create_report')
+   click_cre_rep_button.click()
+   time.sleep(7)
+   select_mr_report_option = browser.find_element_by_css_selector('#dlg_select_report_msg > label:nth-child(13) > input[type="radio"]')
+   select_mr_report_option.click()
+   time.sleep(7)
+   select_mr_report_option_save = browser.find_element_by_xpath('/html/body/div[14]/div[4]/div/button[1]/span')
+   select_mr_report_option_save.click()
+   time.sleep(7)
+   select_mr_report_option_close = browser.find_element_by_xpath('/html/body/div[14]/div[4]/div/button[2]/span')
+   select_mr_report_option_close.click()
+   print ("Report downloaded successfully") ##dlg_select_report_msg > label:nth-child(3) > input[type="radio"] 
+   time.sleep(7) ##dlg_select_report_msg > label:nth-child(5) > input[type="radio"]
+   
+   click_cre_rep_button = browser.find_element_by_id('btn_create_report')
+   click_cre_rep_button.click()
+   time.sleep(5)
+   select_full_report_option = browser.find_element_by_css_selector('#dlg_select_report_msg > label:nth-child(11) > input[type="radio"]')
+   select_full_report_option.click()
+   time.sleep(5)
+
+   select_HO_report_option_processed = browser.find_element_by_xpath('/html/body/div[14]/div[3]/div/button[1]/span')
+   select_HO_report_option_processed.click()
+   time.sleep(10)
+   select_HO_report_option_save = browser.find_element_by_xpath('/html/body/div[13]/div[13]/div/button[1]/span')
+   select_HO_report_option_save.click()
+   time.sleep(10)
+   select_HO_report_option_close = browser.find_element_by_xpath('/html/body/div[13]/div[13]/div/button[2]/span')
+   select_HO_report_option_close.click()
+   print ("Report downloaded successfully") ##dlg_select_report_msg > label:nth-child(3) > input[type="radio"]
+   time.sleep(8) ##dlg_select_report_msg > label:nth-child(5) > input[type="radio"]
+   browser.quit()
+   return 0
+
+def download_HO(link):
+   print [link]
+   #browser = webdriver.Chrome(executable_path=chromedriver_path)
+   #========
+   #download_dir = main_path
+   chrome_options = webdriver.ChromeOptions()
+   preferences = {"download.default_directory": main_path ,
+               "directory_upgrade": True,
+               "safebrowsing.enabled": True }
+   chrome_options.add_experimental_option("prefs", preferences)
+   browser = webdriver.Chrome(chrome_options=chrome_options,executable_path=chromedriver_path)
+   #==========
+   browser.get(link)
+   username = browser.find_element_by_id("IDToken1")
+   username.send_keys('rmolgary')
+   passwd = browser.find_element_by_id("IDToken2")
+   passwd.send_keys('*******')
+   browser.find_element_by_name('Login.Submit').click()
+   print ("Login successful")
+   time.sleep(5)
+   click_cre_rep_button = browser.find_element_by_id('btn_create_report')
+   click_cre_rep_button.click()
+   time.sleep(2)
+   select_ho_report_option = browser.find_element_by_css_selector('#dlg_select_report_msg > label:nth-child(11) > input[type="radio"]')
+   select_ho_report_option.click() 
+   time.sleep(15) ##dlg_select_report_msg > label:nth-child(5) > input[type="radio"]
+   select_HO_report_option_save = browser.find_element_by_xpath('/html/body/div[14]/div[5]/div/button[1]/span')
+   select_HO_report_option_save.click()
+   time.sleep(2)
+   select_HO_report_option_close = browser.find_element_by_xpath('/html/body/div[14]/div[5]/div/button[2]/span')
+   select_HO_report_option_close.click()
+   print ("Report downloaded successfully") ##dlg_select_report_msg > label:nth-child(3) > input[type="radio"]
+   browser.quit()
+   return 0
+
+def check_any_csv_file_exits():
+   os.chdir(main_path)
+   os.getcwd()
+   filelist = glob.glob("*.csv")
+   for f in filelist:
+       os.remove(f)
+      
+def check_any_xlsx_file_exits():
+   os.chdir(main_path)
+   filelist = glob.glob("*.xlsx")
+   for f in filelist:
+      os.remove(f)
+      
+def sorting_MT_links():
+    os.chdir(main_path)
+    file_list = glob.glob('*.csv')
+    for filename in file_list:
+        df = pd.read_csv( filename )
+        df = df.sort_values(by='MT Links Dropped > 60 sec',ascending=[False])
+        df.to_csv(filename,index=False)
+    
+def conver_csv_to_xlsx():
+    os.chdir(main_path)
+    for csvfile in glob.glob(os.path.join('.', '*.csv')):
+        df_new = pd.read_csv(csvfile)
+        writer = pd.ExcelWriter(csvfile[:-4] + '.xlsx')
+        df_new.to_excel(writer, index = False)
+        writer.save()
+#=================================
+def exl():
+    Yrows = [17, 18, 19, 20, 38, 39, 40, 41, 59, 60, 61, 62, 80, 81, 82, 83, 101, 102, 103, 104, 122, 123, 124, 125, 143, 144, 145, 146, 149]
+    Jbcol2 = PatternFill(start_color='FFDCE6F1', end_color='FFDCE6F1', fill_type='solid')
+    UALcol2 = PatternFill(start_color='FFFDE9D9', end_color='FFFDE9D9', fill_type='solid')
+    Vxcol2 = PatternFill(start_color='FFEBF1DE', end_color='FFEBF1DE', fill_type='solid')
+    ELALcol2 = PatternFill(start_color='FFDDD9C4', end_color='FFDDD9C4', fill_type='solid')
+    Qxcol2 = PatternFill(start_color='FFFABF8F', end_color='FFFABF8F', fill_type='solid')
+    AAcol2 = PatternFill(start_color='FFC4BD97', end_color='FFC4BD97', fill_type='solid')
+    yellow = PatternFill(start_color='FFFFFF00', end_color='FFFFFF00', fill_type='solid')
+
+    ihf = 'FF808080'
+    jb = 'FF4F81BD'
+    ul = 'FFC0504D'
+    vx = 'FF9BBB59'
+    el = 'FFB1A0C7'
+    qx = 'FFE26B0A'
+
+
+    IHF = PatternFill(start_color=ihf, end_color=ihf, fill_type='solid')
+    Jbcol = PatternFill(start_color=jb, end_color=jb, fill_type='solid')
+    UALcol = PatternFill(start_color=ul, end_color=ul, fill_type='solid')
+    Vxcol = PatternFill(start_color=vx, end_color=vx, fill_type='solid')
+    ELALcol = PatternFill(start_color=el, end_color=el, fill_type='solid')
+    Qxcol = PatternFill(start_color=qx, end_color=qx, fill_type='solid')
+
+    #Get yesterday date
+    x = 1
+    yesterday_date = date.today() - timedelta(days = x)
+    convert_yesterday_date_to_string = yesterday_date.strftime('%Y%m%d')
+    Prodops_date = yesterday_date.strftime('%m/%d/%Y')
+    report_date = convert_yesterday_date_to_string
+
+    #Importing master sheet
+    #os.chdir(r'C:\Users\338153\Downloads\ProdOps_v5\Input\\')
+    os.chdir(input_path)
+    wb = openpyxl.load_workbook('ProdOpsData_input.xlsx')
+    wb.get_sheet_names()
+    sheet =wb.get_sheet_by_name('Historical')
+
+    #JetBlue
+    os.chdir(main_path)
+    wb_JB = openpyxl.load_workbook('Mobility_Report_JetBlue_arrive_'+ report_date + '.xlsx')
+    sheet_JB =wb_JB.get_sheet_by_name('Sheet1')
+    max_col = sheet.max_column + 1
+    sheet.cell(row=3, column=max_col).value = Prodops_date
+    sheet.cell(row= 3, column=max_col).fill = Jbcol2
+    j=4
+    for i in range(2, sheet_JB.max_row+1):  
+        sheet.cell(row=j, column=max_col).value = sheet_JB['B' + str(i)].value
+        sheet.cell(row= j, column=max_col).fill = Jbcol2
+        j += 1   
+    
+    #United
+    wb_UAL = openpyxl.load_workbook('Mobility_Report_United_arrive_'+ report_date + '.xlsx')
+    sheet_UAL =wb_UAL.get_sheet_by_name('Sheet1')
+    sheet.cell(row=24, column=max_col).value = Prodops_date
+    sheet.cell(row= 24, column=max_col).fill = UALcol2          
+    j=25
+    for i in range(2, sheet_JB.max_row+1):  
+        sheet.cell(row=j, column=max_col).value = sheet_UAL['B' + str(i)].value
+        sheet.cell(row= j, column=max_col).fill = UALcol2
+        j += 1 
+
+    #Virgin
+    wb_Vx = openpyxl.load_workbook('Mobility_Report_Virgin_arrive_'+ report_date + '.xlsx')
+    sheet_Vx =wb_Vx.get_sheet_by_name('Sheet1')
+    sheet.cell(row=45, column=max_col).value = Prodops_date
+    sheet.cell(row= 45, column=max_col).fill = Vxcol2
+    j=46
+    for i in range(2, sheet_JB.max_row+1):  
+        sheet.cell(row=j, column=max_col).value = sheet_Vx['B' + str(i)].value
+        sheet.cell(row= j, column=max_col).fill = Vxcol2
+        j += 1
+
+    #ELAL
+    wb_ELAL = openpyxl.load_workbook('Mobility_Report_El_Al_arrive_'+ report_date + '.xlsx')
+    sheet_ELAL =wb_ELAL.get_sheet_by_name('Sheet1')
+    sheet.cell(row=66, column=max_col).value = Prodops_date
+    sheet.cell(row= 66, column=max_col).fill = ELALcol2          
+    j=67
+    for i in range(2, sheet_JB.max_row+1):  
+        sheet.cell(row=j, column=max_col).value = sheet_ELAL['B' + str(i)].value
+        sheet.cell(row= j, column=max_col).fill = ELALcol2
+        j += 1
+
+    #Qantas
+    wb_Qx = openpyxl.load_workbook('Mobility_Report_Qantas_arrive_'+ report_date + '.xlsx')
+    sheet_Qx =wb_Qx.get_sheet_by_name('Sheet1')
+    sheet.cell(row=87, column=max_col).value = Prodops_date
+    sheet.cell(row= 87, column=max_col).fill = Qxcol2
+    j=88
+    for i in range(2, sheet_JB.max_row+1):  
+        sheet.cell(row=j, column=max_col).value = sheet_Qx['B' + str(i)].value
+        sheet.cell(row= j, column=max_col).fill = Qxcol2
+        j += 1
+
+    #American
+    wb_AAL = openpyxl.load_workbook('Mobility_Report_American_arrive_'+ report_date + '.xlsx')
+    sheet_AAL =wb_AAL.get_sheet_by_name('Sheet1')
+    sheet.cell(row=108, column=max_col).value = Prodops_date
+    sheet.cell(row= 108, column=max_col).fill = AAcol2
+    j=109
+    for i in range(2, sheet_JB.max_row+1):  
+        sheet.cell(row=j, column=max_col).value = sheet_AAL['B' + str(i)].value
+        sheet.cell(row= j, column=max_col).fill = AAcol2
+        j += 1
+    #SAS
+    wb_AAL = openpyxl.load_workbook('Mobility_Report_SAS_arrive_'+ report_date + '.xlsx')
+    sheet_AAL =wb_AAL.get_sheet_by_name('Sheet1')
+    sheet.cell(row=129, column=max_col).value = Prodops_date
+    sheet.cell(row= 129, column=max_col).fill = Jbcol2
+    j=130
+    for i in range(2, sheet_JB.max_row+1):  
+        sheet.cell(row=j, column=max_col).value = sheet_AAL['B' + str(i)].value
+        sheet.cell(row= j, column=max_col).fill = Jbcol2
+        j += 1
+
+    #HO Report
+    sheet.cell(row=152, column=max_col).value = Prodops_date
+    sheet.cell(row=152, column=max_col).fill = IHF          
+    wb_JB = openpyxl.load_workbook('Handover_Failure_Report_JetBlue_'+ report_date + '.xlsx')
+    sheet_JB =wb_JB.get_sheet_by_name('Sheet1')
+    sheet.cell(row=153, column=max_col).value = (sheet_JB.cell(row=sheet_JB.max_row, column=sheet_JB.max_column).value) / 100.0
+    sheet.cell(row=153, column=max_col).number_format = '0.00%' 
+    sheet.cell(row=153, column=max_col).fill = Jbcol          
+
+    wb_UAL = openpyxl.load_workbook('Handover_Failure_Report_United_'+ report_date + '.xlsx')
+    sheet_UAL =wb_UAL.get_sheet_by_name('Sheet1')
+    sheet.cell(row=154, column=max_col).value = sheet_UAL.cell(row=sheet_UAL.max_row, column=sheet_UAL.max_column).value  / 100.0
+    sheet.cell(row=154, column=max_col).number_format = '0.00%'
+    sheet.cell(row=154, column=max_col).fill = UALcol
+          
+    wb_Vx = openpyxl.load_workbook('Handover_Failure_Report_Virgin_'+ report_date + '.xlsx')
+    sheet_Vx =wb_Vx.get_sheet_by_name('Sheet1')
+    sheet.cell(row=155, column=max_col).value = sheet_Vx.cell(row=sheet_Vx.max_row, column=sheet_Vx.max_column).value / 100.0
+    sheet.cell(row=155, column=max_col).number_format = '0.00%'
+    sheet.cell(row=155, column=max_col).fill = Vxcol
+          
+    wb_ELAL = openpyxl.load_workbook('Handover_Failure_Report_El_Al_'+ report_date + '.xlsx')
+    sheet_ELAL =wb_ELAL.get_sheet_by_name('Sheet1')
+    sheet.cell(row=156, column=max_col).value = sheet_ELAL.cell(row=sheet_ELAL.max_row, column=sheet_ELAL.max_column).value / 100.0
+    sheet.cell(row=156, column=max_col).number_format = '0.00%'
+    sheet.cell(row=156, column=max_col).fill = ELALcol
+          
+    wb_Qx = openpyxl.load_workbook('Handover_Failure_Report_Qantas_'+ report_date + '.xlsx')
+    sheet_Qx =wb_Qx.get_sheet_by_name('Sheet1')
+    sheet.cell(row=157, column=max_col).value = sheet_Qx.cell(row=sheet_Qx.max_row, column=sheet_Qx.max_column).value / 100.0
+    sheet.cell(row=157, column=max_col).number_format = '0.00%'
+    sheet.cell(row=157, column=max_col).fill = Qxcol
+          
+    wb_AAL = openpyxl.load_workbook('Handover_Failure_Report_American_'+ report_date + '.xlsx')
+    sheet_AAL =wb_AAL.get_sheet_by_name('Sheet1')
+    sheet.cell(row=158, column=max_col).value = sheet_AAL.cell(row=sheet_AAL.max_row, column=sheet_AAL.max_column).value / 100.0
+    sheet.cell(row=158, column=max_col).number_format = '0.00%'
+    sheet.cell(row=158, column=max_col).fill = Qxcol
+              
+    wb_SAS = openpyxl.load_workbook('Handover_Failure_Report_SAS_'+ report_date + '.xlsx')
+    sheet_SAS =wb_SAS.get_sheet_by_name('Sheet1')
+    sheet.cell(row=159, column=max_col).value = sheet_SAS.cell(row=sheet_SAS.max_row, column=sheet_SAS.max_column).value / 100.0
+    sheet.cell(row=159, column=max_col).number_format = '0.00%'
+    sheet.cell(row=159, column=max_col).fill = Jbcol2
+    
+    #Full report JB          
+    wb_JB = openpyxl.load_workbook('SMS_Report_JetBlue_arrive_'+ report_date + '.xlsx')
+    sheet_JB =wb_JB.get_sheet_by_name('Sheet1')
+    b = sheet_JB.max_row
+
+    for i in range(2, b+1):
+        for j in range(28,33):
+            if(sheet_JB.cell(row=i, column=j).value == None):
+                sheet_JB.cell(row=i, column=j).value = 0
+    dark = 0                    
+    for i in range(2, b+1):
+        if(sheet_JB.cell(row=i, column=10).value != 0 and sheet_JB.cell(row=i, column=28).value == 0 and sheet_JB.cell(row=i, column=31).value == 0 and sheet_JB.cell(row=i, column=18).value == 0 and sheet_JB.cell(row=i, column=24).value==0):
+            dark = dark + 1
+    sheet.cell(row=18, column=max_col).value = dark
+          
+    Zero_ped = 0                    
+    for i in range(2, b+1):
+        if(sheet_JB.cell(row=i, column=10).value != 0 and sheet_JB.cell(row=i, column=29).value != 0 and sheet_JB.cell(row=i, column=32).value != 0 and sheet_JB.cell(row=i, column=24).value==0 and sheet_JB.cell(row=i, column=19).value < 2 and sheet_JB.cell(row=i, column=33).value > 45):
+            Zero_ped = Zero_ped + 1      
+    sheet.cell(row=17, column=max_col).value = Zero_ped  
+
+    #Full report UAL          
+    wb_UAL = openpyxl.load_workbook('SMS_Report_United_arrive_'+ report_date + '.xlsx')
+    sheet_UAL =wb_UAL.get_sheet_by_name('Sheet1')
+    b = sheet_UAL.max_row
+
+    for i in range(2, b+1):
+        for j in range(28,33):
+            if(sheet_UAL.cell(row=i, column=j).value == None):
+                sheet_UAL.cell(row=i, column=j).value = 0
+    dark = 0                    
+    for i in range(2, b+1):
+        if(sheet_UAL.cell(row=i, column=10).value != 0 and sheet_UAL.cell(row=i, column=28).value == 0 and sheet_UAL.cell(row=i, column=31).value == 0 and sheet_UAL.cell(row=i, column=18).value == 0 and sheet_UAL.cell(row=i, column=24).value==0):
+            dark = dark + 1
+    sheet.cell(row=39, column=max_col).value = dark
+          
+    Zero_ped = 0                    
+    for i in range(2, b+1):
+        if(sheet_UAL.cell(row=i, column=10).value != 0 and sheet_UAL.cell(row=i, column=29).value != 0 and sheet_UAL.cell(row=i, column=32).value != 0 and sheet_UAL.cell(row=i, column=24).value==0 and sheet_UAL.cell(row=i, column=19).value < 2  and sheet_UAL.cell(row=i, column=33).value > 45):
+            Zero_ped = Zero_ped + 1      
+    sheet.cell(row=38, column=max_col).value = Zero_ped
+
+    #Full report Vx          
+    wb_Vx = openpyxl.load_workbook('SMS_Report_Virgin_arrive_'+ report_date + '.xlsx')
+    sheet_Vx =wb_Vx.get_sheet_by_name('Sheet1')
+    b = sheet_Vx.max_row
+
+    for i in range(2, b+1):
+        for j in range(28,33):
+            if(sheet_Vx.cell(row=i, column=j).value == None):
+                sheet_Vx.cell(row=i, column=j).value = 0
+    dark = 0                    
+    for i in range(2, b+1):
+        if(sheet_Vx.cell(row=i, column=10).value != 0 and sheet_Vx.cell(row=i, column=28).value == 0 and sheet_Vx.cell(row=i, column=31).value == 0 and sheet_Vx.cell(row=i, column=18).value == 0 and sheet_Vx.cell(row=i, column=24).value==0):
+            dark = dark + 1
+    sheet.cell(row=60, column=max_col).value = dark
+          
+    Zero_ped = 0                    
+    for i in range(2, b+1):
+        if(sheet_Vx.cell(row=i, column=10).value != 0 and sheet_Vx.cell(row=i, column=29).value != 0 and sheet_Vx.cell(row=i, column=32).value != 0 and sheet_Vx.cell(row=i, column=24).value==0 and sheet_Vx.cell(row=i, column=19).value < 2 and sheet_Vx.cell(row=i, column=33).value > 45):
+            Zero_ped = Zero_ped + 1      
+    sheet.cell(row=59, column=max_col).value = Zero_ped 
+              
+    #Full report ELAL          
+    wb_El = openpyxl.load_workbook('SMS_Report_El_Al_arrive_'+ report_date + '.xlsx')
+    sheet_El =wb_El.get_sheet_by_name('Sheet1')
+    b = sheet_El.max_row
+
+    for i in range(2, b+1):
+        for j in range(28,33):
+            if(sheet_El.cell(row=i, column=j).value == None):
+                sheet_El.cell(row=i, column=j).value = 0
+    dark = 0                    
+    for i in range(2, b+1):
+        if(sheet_El.cell(row=i, column=10).value != 0 and sheet_El.cell(row=i, column=28).value == 0 and sheet_El.cell(row=i, column=31).value == 0 and sheet_El.cell(row=i, column=18).value == 0 and sheet_El.cell(row=i, column=24).value==0):
+            dark = dark + 1
+    sheet.cell(row=81, column=max_col).value = dark
+          
+    Zero_ped = 0                    
+    for i in range(2, b+1):
+        if(sheet_El.cell(row=i, column=10).value != 0 and sheet_El.cell(row=i, column=29).value != 0 and sheet_El.cell(row=i, column=32).value != 0 and sheet_El.cell(row=i, column=24).value==0 and sheet_El.cell(row=i, column=19).value < 2 and sheet_El.cell(row=i, column=33).value > 45):
+            Zero_ped = Zero_ped + 1      
+    sheet.cell(row=80, column=max_col).value = Zero_ped 
+
+    #Full report Qx          
+    wb_Qx = openpyxl.load_workbook('SMS_Report_Qantas_arrive_'+ report_date + '.xlsx')
+    sheet_Qx =wb_Qx.get_sheet_by_name('Sheet1')
+    b = sheet_Qx.max_row
+
+    for i in range(2, b+1):
+        for j in range(28,33):
+            if(sheet_Qx.cell(row=i, column=j).value == None):
+                sheet_Qx.cell(row=i, column=j).value = 0
+    dark = 0                    
+    for i in range(2, b+1):
+        if(sheet_Qx.cell(row=i, column=10).value != 0 and sheet_Qx.cell(row=i, column=28).value == 0 and sheet_Qx.cell(row=i, column=31).value == 0 and sheet_Qx.cell(row=i, column=18).value == 0 and sheet_Qx.cell(row=i, column=24).value==0):
+            dark = dark + 1
+    sheet.cell(row=102, column=max_col).value = dark
+          
+    Zero_ped = 0                    
+    for i in range(2, b+1):
+        if(sheet_Qx.cell(row=i, column=10).value != 0 and sheet_Qx.cell(row=i, column=29).value != 0 and sheet_Qx.cell(row=i, column=32).value != 0 and sheet_Qx.cell(row=i, column=24).value==0 and sheet_Qx.cell(row=i, column=19).value < 2 and sheet_Qx.cell(row=i, column=33).value > 45):
+            Zero_ped = Zero_ped + 1      
+    sheet.cell(row=101, column=max_col).value = Zero_ped 
+
+    #Full report AAL          
+    wb_AA = openpyxl.load_workbook('SMS_Report_American_arrive_'+ report_date + '.xlsx')
+    sheet_AA =wb_AA.get_sheet_by_name('Sheet1')
+    b = sheet_AA.max_row
+
+    for i in range(2, b+1):
+        for j in range(28,33):
+            if(sheet_AA.cell(row=i, column=j).value == None):
+                sheet_AA.cell(row=i, column=j).value = 0
+    dark = 0                    
+    for i in range(2, b+1):
+        if(sheet_AA.cell(row=i, column=10).value != 0 and sheet_AA.cell(row=i, column=28).value == 0 and sheet_AA.cell(row=i, column=31).value == 0 and sheet_AA.cell(row=i, column=18).value == 0 and sheet_AA.cell(row=i, column=24).value==0):
+            dark = dark + 1
+    sheet.cell(row=123, column=max_col).value = dark
+          
+    Zero_ped = 0                    
+    for i in range(2, b+1):
+        if(sheet_AA.cell(row=i, column=10).value != 0 and sheet_AA.cell(row=i, column=29).value != 0 and sheet_AA.cell(row=i, column=32).value != 0 and sheet_AA.cell(row=i, column=24).value==0 and sheet_AA.cell(row=i, column=19).value < 2 and sheet_AA.cell(row=i, column=33).value > 45):
+            Zero_ped = Zero_ped + 1      
+    sheet.cell(row=122, column=max_col).value = Zero_ped
+
+    #Full report SAS          
+    wb_SAS = openpyxl.load_workbook('SMS_Report_SAS_arrive_'+ report_date + '.xlsx')
+    sheet_SAS =wb_SAS.get_sheet_by_name('Sheet1')
+    b = sheet_SAS.max_row
+
+    for i in range(2, b+1):
+        for j in range(28,33):
+            if(sheet_SAS.cell(row=i, column=j).value == None):
+                sheet_SAS.cell(row=i, column=j).value = 0
+    dark = 0                    
+    for i in range(2, b+1):
+        if(sheet_SAS.cell(row=i, column=10).value != 0 and sheet_SAS.cell(row=i, column=28).value == 0 and sheet_SAS.cell(row=i, column=31).value == 0 and sheet_SAS.cell(row=i, column=18).value == 0 and sheet_SAS.cell(row=i, column=24).value==0):
+            dark = dark + 1
+    sheet.cell(row=144, column=max_col).value = dark
+          
+    Zero_ped = 0                    
+    for i in range(2, b+1):
+        if(sheet_SAS.cell(row=i, column=10).value != 0 and sheet_SAS.cell(row=i, column=29).value != 0 and sheet_SAS.cell(row=i, column=32).value != 0 and sheet_SAS.cell(row=i, column=24).value==0 and sheet_SAS.cell(row=i, column=19).value < 2 and sheet_SAS.cell(row=i, column=33).value > 45):
+            Zero_ped = Zero_ped + 1      
+    sheet.cell(row=143, column=max_col).value = Zero_ped
+        
+    #HO Report
+    wb_Hoall = openpyxl.load_workbook('Handover_Failure_Report_JetBlue&United&Virgin&Qantas&El_Al&American&SAS_'+ report_date + '.xlsx')
+    sheet_Hoall =wb_Hoall.get_sheet_by_name('Sheet1')
+    sheet.cell(row=149, column=max_col).value = sheet_Hoall.cell(row=sheet_Hoall.max_row, column=sheet_Hoall.max_column).value / 100.0
+    sheet.cell(row=149, column=max_col).number_format = '0.00%' 
+                      
+    for i in Yrows:
+        sheet.cell(row= i, column=max_col).fill = yellow
+                    
+    thin_border = Border(left=Side(style='thin'), 
+                         right=Side(style='thin'), 
+                         top=Side(style='thin'), 
+                         bottom=Side(style='thin'))
+
+    bottom_border = Border(left=Side(style='none'), 
+                         right=Side(style='none'), 
+                         top=Side(style='none'), 
+                         bottom=Side(style='medium'))
+
+    for i in range(153, 160):
+        sheet.cell(row= i, column=max_col).border = thin_border
+              
+    botb = [16, 18, 20, 37, 39, 41, 58, 60, 62, 79, 81, 83, 100, 102, 104, 121, 123, 125, 127, 128, 142, 144, 146, 148, 149, 151]
+    for i in botb:
+        sheet.cell(row= i, column=max_col).border = bottom_border
+
+    wb.save('ProdOps_output.xlsx')
+
+def main( argv ):
+   start = time.time()
+   #Date format 2017/04/06 ( YYYY/Month/Day )
+   print "Total input is [%d]" %len(sys.argv)
+   if len(sys.argv) < 1:
+      sys.exit('Usage: <python exe> <script name> <acru lock out tar file> for example:: python.exe Acru_Lockout_report.py C:\Users\user\Music\Desktop\acru_lockout_recovery_logs.tgz')
+   start_date,end_date,link_JB,link_UAL,only_for_master_log_date_appened = ('','','','','')
+   if len(sys.argv) > 1: # This if part code will be developed when it is required.
+      number_of_days_to_subtract = int(sys.argv[1]) - 1
+      end_date = date.today().strftime('%Y%m%d')
+	  
+      which_date_report_prepare = date.today() - timedelta(days=number_of_days_to_subtract)
+      convert_date_to_string = which_date_report_prepare.strftime('%Y%m%d')
+      start_date = convert_date_to_string
+      only_for_master_log_date_appened = start_date + '-' + end_date
+   else:
+      number_of_days_to_subtract = 1 #0
+      which_date_report_prepare = date.today() - timedelta(days=number_of_days_to_subtract)
+      convert_date_to_string = which_date_report_prepare.strftime('%Y%m%d')
+      start_date = convert_date_to_string
+      link_all = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=jetblue,united,virgin,qantas,elal,american,sas'
+      link_AA = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=american'
+      link_JB = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=jetblue&foreign=0'
+      link_UAL = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=united&foreign=0'
+      link_vx = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=virgin'
+      link_ELAL = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=elal'
+      link_SAS = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=sas'
+      link_Qantas = 'https://exedeair.sms.viasat.io/mSVT/flightreports/index.php?start_date=' + start_date + '&airline=qantas'
+
+      check_any_csv_file_exits()
+      check_any_xlsx_file_exits()
+      
+      p = Pool(5)
+      p.map(download_report_1, [link_vx, link_SAS, link_ELAL, link_Qantas,link_AA])
+      
+      q = Pool(2)
+      q.map(download_report_2, [link_JB, link_UAL])
+     
+      download_HO(link_all)
+      #all_downld_file_names = get_the_downloaded_file_name()
+      #sorting_MT_links()
+      conver_csv_to_xlsx()     
+      time.sleep(20)
+      check_any_csv_file_exits()
+      exl()
+      end = time.time()
+      x = end - start
+      print "ProdOps report prepared successfully:", x   
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
